@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -20,6 +21,10 @@ public class UserService {
     private final UserStorage userStorage;
 
     public User addFriend(Long userId, Long friendId) {
+        if (userId == friendId) {
+            throw new ValidationException("Пользователь не может добавить самого себя в друзья");
+        }
+
         User user = getUserById(userId);
         User friend = getUserById(friendId);
 
@@ -34,6 +39,10 @@ public class UserService {
     }
 
     public User removeFriend(Long userId, Long friendId) {
+        if (userId == friendId) {
+            throw new ValidationException("Пользователь не может удалить самого себя из друзей");
+        }
+
         User user = getUserById(userId);
         User friend = getUserById(friendId);
 
@@ -55,6 +64,10 @@ public class UserService {
     }
 
     public List<User> getCommonFriends(Long userId, Long otherId) {
+        if (userId == otherId) {
+            throw new ValidationException("Нельзя искать общих друзей для одного и того же пользователя");
+        }
+
         User user = getUserById(userId);
         User otherUser = getUserById(otherId);
 
