@@ -9,10 +9,7 @@ import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -46,7 +43,7 @@ public class UserService {
     }
 
     public User removeFriend(Long userId, Long friendId) {
-        if (userId == friendId) {
+        if (Objects.equals(userId, friendId)) {
             throw new ValidationException("Пользователь не может удалить самого себя из друзей");
         }
 
@@ -71,7 +68,7 @@ public class UserService {
     }
 
     public List<User> getCommonFriends(Long userId, Long otherId) {
-        if (userId == otherId) {
+        if (Objects.equals(userId, otherId)) {
             throw new ValidationException("Нельзя искать общих друзей для одного и того же пользователя");
         }
 
@@ -86,7 +83,6 @@ public class UserService {
                 .map(this::getUserById)
                 .collect(Collectors.toList());
     }
-
 
     public User getUserById(Long id) {
         return userStorage.getUserById(id)
