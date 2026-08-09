@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -28,8 +29,14 @@ public class UserService {
         User user = getUserById(userId);
         User friend = getUserById(friendId);
 
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
+        if (friend.getFriends().containsKey(userId)) {
+            user.getFriends().put(friendId, FriendshipStatus.CONFIRMED);
+            friend.getFriends().put(userId, FriendshipStatus.CONFIRMED);
+            log.info("Пользователи ID: {} и ID: {} теперь взаимные друзья (CONFIRMED)", userId, friendId);
+        } else {
+            user.getFriends().put(friendId, FriendshipStatus.UNCONFIRMED);
+            log.info("Пользователь ID: {} отправил заявку в друзья пользователю ID: {} (UNCONFIRMED)", userId, friendId);
+        }
 
         userStorage.updateUser(user);
         userStorage.updateUser(friend);
