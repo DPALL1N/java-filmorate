@@ -58,7 +58,7 @@ public class UserService {
 
     public List<User> getFriends(Long userId) {
         User user = getUserById(userId);
-        return user.getFriends().stream()
+        return user.getFriends().keySet().stream()
                 .map(this::getUserById)
                 .collect(Collectors.toList());
     }
@@ -71,8 +71,9 @@ public class UserService {
         User user = getUserById(userId);
         User otherUser = getUserById(otherId);
 
-        Set<Long> commonFriendsIds = new HashSet<>(user.getFriends());
-        commonFriendsIds.retainAll(otherUser.getFriends());
+        Set<Long> commonFriendsIds = new HashSet<>(user.getFriends().keySet());
+        Set<Long> otherFriends = otherUser.getFriends().keySet();
+        commonFriendsIds.retainAll(otherFriends);
 
         return commonFriendsIds.stream()
                 .map(this::getUserById)
