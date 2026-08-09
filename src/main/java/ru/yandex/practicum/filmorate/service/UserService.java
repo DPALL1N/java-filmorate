@@ -19,21 +19,15 @@ public class UserService {
     private final UserStorage userStorage;
 
     public User addFriend(Long userId, Long friendId) {
-        if (userId == friendId) {
+        if (Objects.equals(userId, friendId)) {
             throw new ValidationException("Пользователь не может добавить самого себя в друзья");
         }
 
         User user = getUserById(userId);
         User friend = getUserById(friendId);
 
-        if (friend.getFriends().containsKey(userId)) {
-            user.getFriends().put(friendId, FriendshipStatus.CONFIRMED);
-            friend.getFriends().put(userId, FriendshipStatus.CONFIRMED);
-            log.info("Пользователи ID: {} и ID: {} теперь взаимные друзья (CONFIRMED)", userId, friendId);
-        } else {
-            user.getFriends().put(friendId, FriendshipStatus.UNCONFIRMED);
-            log.info("Пользователь ID: {} отправил заявку в друзья пользователю ID: {} (UNCONFIRMED)", userId, friendId);
-        }
+        user.getFriends().put(friendId, FriendshipStatus.CONFIRMED);
+        friend.getFriends().put(userId, FriendshipStatus.CONFIRMED);
 
         userStorage.updateUser(user);
         userStorage.updateUser(friend);
