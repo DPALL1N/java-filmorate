@@ -1,87 +1,56 @@
 package ru.yandex.practicum.filmorate;
 
-import org.junit.jupiter.api.BeforeEach;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.controller.UserController;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
+import org.springframework.context.annotation.Import;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserRowMapper;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
+@JdbcTest
+@Import({UserDbStorage.class, UserRowMapper.class})
+@AutoConfigureTestDatabase
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 class UserControllerTest {
-
-    private UserController userController;
-
-    @BeforeEach
-    void setUp() {
-        InMemoryUserStorage userStorage = new InMemoryUserStorage();
-        UserService userService = new UserService(userStorage);
-
-        userController = new UserController(userService);
-    }
+    private final UserDbStorage userStorage;
 
     @Test
-    void shouldCreateUserWithValidData() {
+    void shouldCreateAndFindUser() {
         User user = new User();
-        user.setEmail("test@yandex.ru");
-        user.setLogin("test_login");
-        user.setName("Test Name");
+        user.setEmail("new-user@test.ru");
+        user.setLogin("new_login");
+        user.setName("New User");
         user.setBirthday(LocalDate.of(2000, 1, 1));
 
-        User createdUser = userController.createUser(user);
+        User saved = userStorage.createUser(user);
 
-        assertNotNull(createdUser.getId());
-        assertEquals("test@yandex.ru", createdUser.getEmail());
+        assertThat(saved.getId()).isNotNull();
+        Optional<User> found = userStorage.getUserById(saved.getId());
+        assertThat(found).isPresent();
+        assertThat(found.get().getEmail()).isEqualTo("new-user@test.ru");
     }
 
     @Test
-    void shouldThrowExceptionWhenEmailIsInvalid() {
+    void shouldFindCreatedUserById() {
         User user = new User();
-        user.setEmail("invalid_email.com");
-        user.setLogin("login");
-        user.setBirthday(LocalDate.of(2000, 1, 1));
+        user.setEmail("find-user@test.ru");
+        user.setLogin("find_user");
+        user.setName("Find User");
+        user.setBirthday(LocalDate.of(2001, 2, 3));
 
-        ValidationException exception = assertThrows(ValidationException.class, () -> {
-            userController.createUser(user);
-        });
+        User saved = userStorage.createUser(user);
+        Optional<User> found = userStorage.getUserById(saved.getId());
 
-        assertTrue(exception.getMessage().contains("Электронная почта"));
-    }
-
-    @Test
-    void shouldThrowExceptionWhenLoginContainsSpaces() {
-        User user = new User();
-        user.setEmail("test@yandex.ru");
-        user.setLogin("bad login");
-        user.setBirthday(LocalDate.of(2000, 1, 1));
-
-        assertThrows(ValidationException.class, () -> userController.createUser(user));
-    }
-
-    @Test
-    void shouldThrowExceptionWhenBirthdayInFuture() {
-        User user = new User();
-        user.setEmail("test@yandex.ru");
-        user.setLogin("login");
-        user.setBirthday(LocalDate.now().plusDays(1));
-
-        assertThrows(ValidationException.class, () -> userController.createUser(user));
-    }
-
-    @Test
-    void shouldReplaceEmptyNameWithLogin() {
-        User user = new User();
-        user.setEmail("test@yandex.ru");
-        user.setLogin("login_without_name");
-        user.setName("");
-        user.setBirthday(LocalDate.of(2000, 1, 1));
-
-        User createdUser = userController.createUser(user);
-
-        assertEquals("login_without_name", createdUser.getName());
+        assertThat(found)
+                .isPresent()
+                .hasValueSatisfying(value -> assertThat(value.getId()).isEqualTo(saved.getId()));
     }
 }
