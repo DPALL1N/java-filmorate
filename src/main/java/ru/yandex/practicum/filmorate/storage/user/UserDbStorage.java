@@ -28,6 +28,11 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     private static final String DELETE_FRIEND_QUERY = "DELETE FROM friendships WHERE user_id = ? AND friend_id = ?";
     private static final String GET_FRIENDS_QUERY = "SELECT u.* FROM users u " +
             "JOIN friendships f ON u.user_id = f.friend_id WHERE f.user_id = ? ORDER BY u.user_id";
+    private static final String GET_COMMON_FRIENDS_QUERY = "SELECT u.* FROM users u " +
+            "JOIN friendships f1 ON u.user_id = f1.friend_id " +
+            "JOIN friendships f2 ON u.user_id = f2.friend_id " +
+            "WHERE f1.user_id = ? AND f2.user_id = ? " +
+            "ORDER BY u.user_id";
 
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
@@ -78,15 +83,23 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
         return findOne(FIND_BY_LOGIN_QUERY, login);
     }
 
+    @Override
     public void addFriend(Long userId, Long friendId) {
         jdbc.update(ADD_FRIEND_QUERY, userId, friendId);
     }
 
+    @Override
     public void removeFriend(Long userId, Long friendId) {
         jdbc.update(DELETE_FRIEND_QUERY, userId, friendId);
     }
 
+    @Override
     public List<User> getFriends(Long userId) {
         return findMany(GET_FRIENDS_QUERY, userId);
+    }
+
+    @Override
+    public List<User> getCommonFriends(Long userId, Long otherId) {
+        return findMany(GET_COMMON_FRIENDS_QUERY, userId, otherId);
     }
 }
