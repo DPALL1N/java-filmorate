@@ -6,17 +6,13 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-/**
- * Film.
- */
 @Data
 public class Film {
     private Long id;
-    private Set<Long> likes = new HashSet<>();
+    private Set<Long> likes = new LinkedHashSet<>();
 
     @NotBlank(message = "Название фильма не может быть пустым")
     private String name;
@@ -31,6 +27,5 @@ public class Film {
     private int duration;
 
     private MPA mpa;
-    private LinkedHashSet<Genre> genre;
-
+    private LinkedHashSet<Genre> genres = new LinkedHashSet<>();
 }

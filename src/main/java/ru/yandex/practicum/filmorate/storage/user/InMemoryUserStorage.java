@@ -37,4 +37,53 @@ public class InMemoryUserStorage implements UserStorage {
     public Optional<User> getUserById(Long id) {
         return Optional.ofNullable(users.get(id));
     }
+
+    @Override
+    public void addFriend(Long userId, Long friendId) {
+        User user = users.get(userId);
+        User friend = users.get(friendId);
+        if (user != null && friend != null) {
+            user.getFriends().put(friendId, ru.yandex.practicum.filmorate.model.FriendshipStatus.CONFIRMED);
+            friend.getFriends().put(userId, ru.yandex.practicum.filmorate.model.FriendshipStatus.CONFIRMED);
+        }
+    }
+
+    @Override
+    public void removeFriend(Long userId, Long friendId) {
+        User user = users.get(userId);
+        User friend = users.get(friendId);
+        if (user != null && friend != null) {
+            user.getFriends().remove(friendId);
+            friend.getFriends().remove(userId);
+        }
+    }
+
+    @Override
+    public List<User> getFriends(Long userId) {
+        User user = users.get(userId);
+        if (user == null) {
+            return List.of();
+        }
+        return user.getFriends().keySet().stream()
+                .map(users::get)
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    @Override
+    public List<User> getCommonFriends(Long userId, Long otherId) {
+        User firstUser = users.get(userId);
+        User secondUser = users.get(otherId);
+        if (firstUser == null || secondUser == null) {
+            return List.of();
+        }
+
+        Set<Long> first = new HashSet<>(firstUser.getFriends().keySet());
+        Set<Long> second = new HashSet<>(secondUser.getFriends().keySet());
+        return first.stream()
+                .filter(second::contains)
+                .map(users::get)
+                .filter(Objects::nonNull)
+                .toList();
+    }
 }
